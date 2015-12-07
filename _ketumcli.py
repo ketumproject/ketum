@@ -138,20 +138,29 @@ def ls(cfg, pretty):
 
 
 @storage.command()
-@click.option(
-    '--name',
-    help='Storage name.',
-    prompt='Name',
+@click.argument(
+    'name',
+    nargs=1,
+)
+@click.argument(
+    'other_names',
+    nargs=-1,
 )
 @pass_cfg
-def rm(cfg, name):  # TODO: Add remove destroy
+def rm(cfg, name, other_names):  # TODO: Add remove destroy
+    storage_manager = StorageManager()
+    all_names = (name, ) + other_names
+
+    if not any([storage_manager.exists(_name) for _name in all_names]):
+        raise click.ClickException('No storage found!')
+    
     if click.confirm(
             'This will destroy your storage from local. Are you '
             'sure you want to do this?'):
-        storage_manager = StorageManager()
-        try:
-            storage_manager.delete(name)
-        except NameError, e:
-            raise click.ClickException(e.message)
+        for _name in filter(lambda x: storage_manager.exists(x), all_names):
+            try:
+                storage_manager.delete(_name)
+            except NameError, e:
+                raise click.ClickException(e.message)
 
-        click.echo('Storage %s has been destroyed.' % name)
+            click.echo('Storage %s has been destroyed.' % name)

@@ -72,6 +72,10 @@ class StorageManager(object):
 
         return storage_list
 
+    def exists(self, storage_name):
+        file_path = os.path.join(storage_dir, storage_name)
+        return os.path.exists(file_path)
+
     def delete(self, storage_name):
         file_path = os.path.join(storage_dir, storage_name)
 
