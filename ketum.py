@@ -78,4 +78,4 @@ class StorageManager(object):
         if not os.path.exists(file_path):
             raise NameError("Storage does not exists!")
 
-        subprocess.check_call(['srm', '-Erf', file_path])
+        subprocess.check_call(['srm', '-r', file_path])
