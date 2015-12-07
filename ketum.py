@@ -13,6 +13,9 @@ ketum_path = os.path.join(os.path.expanduser("~"), '.ketum')
 if not os.path.exists(ketum_path):
     os.makedirs(ketum_path)
 
+storage_dir = os.path.join(ketum_path, 'storages/')
+if not os.path.exists(storage_dir):
+    os.makedirs(storage_dir)
 
 class StorageManager(object):
     def __init__(self, proxy_host=None, proxy_port=None):
@@ -20,10 +23,6 @@ class StorageManager(object):
         self.proxy_port = proxy_port
 
     def new_storage(self, baseurl, storage_name, description, passphrase):
-        storage_dir = os.path.join(ketum_path, 'storages/')
-        if not os.path.exists(storage_dir):
-            os.makedirs(storage_dir)
-
         if os.path.exists(os.path.join(storage_dir, storage_name)):
             raise NameError("Storage name is not available!")
 
@@ -39,15 +38,15 @@ class StorageManager(object):
         key = base64.urlsafe_b64encode(kdf.derive(passphrase))
         fernet = Fernet(key)
 
-        user_secret_key = ketumclib.User.generate_key()
+        storage_secret_key = ketumclib.Storage.generate_key()
 
         api = ketumclib.Api(baseurl)
-        user = ketumclib.User(user_secret_key, api)
-        user.register()
+        storage = ketumclib.Storage(storage_secret_key, api)
+        storage.register()
 
         # Encrypted Storage Metadata
         esm = fernet.encrypt(json.dumps({
-            'secret_key': user_secret_key,
+            'secret_key': storage_secret_key,
             'baseurl': baseurl,
         }))
 
@@ -59,7 +58,6 @@ class StorageManager(object):
             ))
 
     def storages(self):
-        storage_dir = os.path.join(ketum_path, 'storages/')
         storage_list = list()
         for storage_name in os.listdir(storage_dir):
 
@@ -75,8 +73,6 @@ class StorageManager(object):
         return storage_list
 
     def delete(self, storage_name):
-        storage_dir = os.path.join(ketum_path, 'storages/')
-
         file_path = os.path.join(storage_dir, storage_name)
 
         if not os.path.exists(file_path):
