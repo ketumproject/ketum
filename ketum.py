@@ -4,6 +4,7 @@ import base64
 import subprocess
 
 from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -57,6 +58,38 @@ class StorageManager(object):
                 description,
             ))
 
+    def get_storage(self, storage_name, passphrase):
+        storage_file = os.path.join(storage_dir, storage_name)
+
+        with open(storage_file) as f:
+            _salt, esm, description = f.read().split(' ', 2)
+
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=base64.b64decode(_salt),
+            iterations=100000,
+            backend=default_backend()
+        )
+        del _salt
+        del description
+
+        key = base64.urlsafe_b64encode(kdf.derive(passphrase))
+        fernet = Fernet(key)
+
+        try:
+            storage_metadata = json.loads(fernet.decrypt(esm))
+        except InvalidToken:
+            raise Exception('Passphrase is invalid!')
+
+        api = ketumclib.Api(storage_metadata['baseurl'])
+        storage = ketumclib.Storage(storage_metadata['secret_key'], api)
+
+        if not storage.login():
+            raise Exception('Strange, but storage is not registered?')
+
+        return storage
+
     def storages(self):
         storage_list = list()
         for storage_name in os.listdir(storage_dir):
@@ -68,6 +101,7 @@ class StorageManager(object):
             with open(file_path) as f:
                 content = f.read()
                 salt, esm, description = content.split(' ', 2)
+                del esm
                 storage_list.append((storage_name, description))
 
         return storage_list
