@@ -8,6 +8,7 @@ from cryptography.fernet import InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 import _ketumclib
 
 ketum_path = os.path.join(os.path.expanduser("~"), '.ketum')
