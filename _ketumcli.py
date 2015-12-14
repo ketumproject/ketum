@@ -84,7 +84,7 @@ def storage():
     '--passphrase',
     help='Secret key and other informations (except description) '
          'will be encrypted with this passphrase',
-    prompt='Passhrase',
+    prompt='Passphrase',
     confirmation_prompt=True,
 )
 @pass_cfg
