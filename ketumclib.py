@@ -44,7 +44,7 @@ class Storage(object):
         self._signer = PKCS1_PSS.new(self._key)
         self.public_key_str = self._key.publickey().exportKey()
         self.fingerprint = sha256hex(self.public_key_str)
-        self.storage_init = None
+        self.storage_meta = None
         self.filesystem = False
 
     @staticmethod
@@ -67,27 +67,25 @@ class Storage(object):
         return self.cipher.decrypt(naked_ciphertext)
 
     def encrypt_fernet(self, plaintext):
-        crypter = Fernet(self.storage_init.container_key)
+        crypter = Fernet(self.storage_meta.container_key)
         return crypter.encrypt(plaintext)
 
     def decrypt_fernet(self, ciphertext):
         ciphertext = ciphertext.encode()
-        crypter = Fernet(self.storage_init.container_key)
+        crypter = Fernet(self.storage_meta.container_key)
         return crypter.decrypt(ciphertext)
 
     def register(self):
         self.api.register(self)
 
     def login(self):
-        encrypted_storage_init = self.api.login(self.auth_info())
-        if encrypted_storage_init is False:
+        encrypted_storage_meta = self.api.login(self.auth_info())
+        if encrypted_storage_meta is False:
             return False
         else:
-            storage_init_json = self.decrypt_rsa(encrypted_storage_init)
-            self.storage_init = StorageInit(storage_init_json)
-            # root_json = self.get_file(self.storage_init.root_address)
-            # self.filesystem = FSElement.from_json(root_json, self)
-            root_address = self.storage_init.root_address
+            storage_meta_json = self.decrypt_rsa(encrypted_storage_meta)
+            self.storage_meta = StorageInit(storage_meta_json)
+            root_address = self.storage_meta.root_address
             self.filesystem = Directory('/', root_address, self)
             self.filesystem.refresh_from_remote()
         return True
@@ -107,9 +105,9 @@ class Storage(object):
             file_address)
         return self.decrypt_fernet(data)
 
-    def save_storage_init(self):
-        encrypted_storage_data = self.encrypt_rsa(self.storage_init.to_json())
-        self.api.set_storage_init(self.auth_info(), encrypted_storage_data)
+    def save_storage_meta(self):
+        encrypted_storage_data = self.encrypt_rsa(self.storage_meta.to_json())
+        self.api.set_storage_meta(self.auth_info(), encrypted_storage_data)
 
     def auth_info(self):
         contract = self.api.auth_contract(self.fingerprint)
@@ -372,9 +370,9 @@ class Api(object):
 
         root_address = storage.new_file()
         root_dir = Directory('/', root_address, storage)
-        storage.storage_init = StorageInit.generate(root_address)
+        storage.storage_meta = StorageInit.generate(root_address)
         root_dir.save_to_remote()
-        storage.save_storage_init()
+        storage.save_storage_meta()
 
     def login(self, auth_info):
         try:
@@ -387,7 +385,7 @@ class Api(object):
         except KetumClientError:
             return False
         else:
-            return login_data['storage_init']
+            return login_data['storage_meta']
 
     def new_file(self, auth_info):
         file_address = self._make_api_request(
@@ -418,18 +416,18 @@ class Api(object):
                 'file_address': file_address,
             })['container']
 
-    def set_storage_init(self, auth_info, encrypted_storage_data):
+    def set_storage_meta(self, auth_info, encrypted_storage_data):
         self._make_api_request(
-            'set-storage-init',
+            'set-storage-meta',
             method='post',
             payload={
                 'auth': auth_info,
                 'data': encrypted_storage_data,
             })
 
-    def get_storage_init(self, auth_info):
+    def get_storage_meta(self, auth_info):
         return self._make_api_request(
-            'get-storage-init',
+            'get-storage-meta',
             method='post',
             payload={
                 'auth': auth_info,
