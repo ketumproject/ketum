@@ -18,6 +18,7 @@ storage_dir = os.path.join(ketum_path, 'storages/')
 if not os.path.exists(storage_dir):
     os.makedirs(storage_dir)
 
+
 class StorageManager(object):
     def __init__(self, proxy_host=None, proxy_port=None):
         self.proxy_host = proxy_host
