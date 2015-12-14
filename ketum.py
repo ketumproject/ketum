@@ -8,7 +8,7 @@ from cryptography.fernet import InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import ketumclib
+import _ketumclib
 
 ketum_path = os.path.join(os.path.expanduser("~"), '.ketum')
 if not os.path.exists(ketum_path):
@@ -40,10 +40,10 @@ class StorageManager(object):
         key = base64.urlsafe_b64encode(kdf.derive(passphrase))
         fernet = Fernet(key)
 
-        storage_secret_key = ketumclib.Storage.generate_key()
+        storage_secret_key = _ketumclib.Storage.generate_key()
 
-        api = ketumclib.Api(baseurl)
-        storage = ketumclib.Storage(storage_secret_key, api)
+        api = _ketumclib.Api(baseurl)
+        storage = _ketumclib.Storage(storage_secret_key, api)
         storage.register()
 
         # Encrypted Storage Metadata
@@ -83,8 +83,8 @@ class StorageManager(object):
         except InvalidToken:
             raise Exception('Passphrase is invalid!')
 
-        api = ketumclib.Api(storage_metadata['baseurl'])
-        storage = ketumclib.Storage(storage_metadata['secret_key'], api)
+        api = _ketumclib.Api(storage_metadata['baseurl'])
+        storage = _ketumclib.Storage(storage_metadata['secret_key'], api)
 
         if not storage.login():
             raise Exception('Strange, but storage is not registered?')

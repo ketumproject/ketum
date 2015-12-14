@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ketum',
-    version='0.2',
+    version='0.3',
     packages=find_packages(),
     description="Ketum client application",
     url="https://github.com/ketumproject/ketum",
@@ -21,7 +21,6 @@ setup(
 
     keywords="encrypted filesystem storagesystem ketum",
 
-    py_modules=['ketumclib'],
     include_package_data=True,
     install_requires=[
         'click',
