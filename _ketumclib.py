@@ -93,18 +93,6 @@ class Storage(object):
     def new_file(self):
         return self.api.new_file(self.auth_info())
 
-    def set_file(self, file_address, data):
-        self.api.set_file(
-            self.auth_info(),
-            file_address,
-            self.encrypt_fernet(data))
-
-    def get_file(self, file_address):
-        data = self.api.get_file(
-            self.auth_info(),
-            file_address)
-        return self.decrypt_fernet(data)
-
     def save_storage_meta(self):
         encrypted_storage_data = self.encrypt_rsa(self.storage_meta.to_json())
         self.api.set_storage_meta(self.auth_info(), encrypted_storage_data)
@@ -170,7 +158,10 @@ class FSElement(object):
         return element
 
     def refresh_from_remote(self):
-        element_json = self.storage.get_file(self.address)
+        encrypted_data = self.storage.api.get_file(
+            self.storage.auth_info(),
+            self.address)
+        element_json = self.storage.decrypt_fernet(encrypted_data)
         self.remote_data = json.loads(element_json)
         assert self.type == self.remote_data['type'], \
             'Local and remote FSElement types are not same'
@@ -188,7 +179,11 @@ class FSElement(object):
         raise NotImplementedError()
 
     def save_to_remote(self):
-        self.storage.set_file(file_address=self.address, data=self.to_json())
+        self.storage.api.set_file(
+            self.storage.auth_info(),
+            self.address,
+            self.storage.encrypt_fernet(self.to_json())
+        )
 
     @classmethod
     def _name_validator(cls, name):
