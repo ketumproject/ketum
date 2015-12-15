@@ -328,7 +328,7 @@ class File(FSElement):
             'type': self.type,
             'name': self.name,
             'address': self.address,
-            'content': self.content,
+            'content': self._content,
         })
 
     def refresh_from_remote(self):
