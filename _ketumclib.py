@@ -425,14 +425,6 @@ class Api(object):
                 'data': encrypted_storage_data,
             })
 
-    def get_storage_meta(self, auth_info):
-        return self._make_api_request(
-            'get-storage-meta',
-            method='post',
-            payload={
-                'auth': auth_info,
-            })['data']
-
     def auth_contract(self, fingerprint):
         contract = self._make_api_request(
             'get-auth-contract',
