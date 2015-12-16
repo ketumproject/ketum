@@ -63,7 +63,8 @@ class StorageTest(unittest.TestCase):
         storage.register()
         file_name = storage.new_file()
         pattern = re.compile('^([0-9A-f]{32})$')
-        pattern.match(file_name)
+        self.assertTrue(bool(pattern.match(file_name)))
+
 
     # Expand test coverage
 
