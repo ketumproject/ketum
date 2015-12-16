@@ -93,6 +93,9 @@ class Storage(object):
     def new_file(self):
         return self.api.new_file(self.auth_info())
 
+    def destroy_storage(self):
+        self.api.destroy_storage(self.auth_info())
+
     def save_storage_meta(self):
         encrypted_storage_data = self.encrypt_rsa(self.storage_meta.to_json())
         self.api.set_storage_meta(self.auth_info(), encrypted_storage_data)
@@ -185,6 +188,12 @@ class FSElement(object):
             self.storage.encrypt_fernet(self.to_json())
         )
 
+    def _destroy(self):
+        self.parent.del_element(self.name)
+        self.parent.save_to_remote()
+        data = self.storage.api.destroy_files(
+            self.storage.auth_info(), [self.address])
+
     @classmethod
     def _name_validator(cls, name):
         char_set = cls.ALLOWED_CHARS_FOR_NAME
@@ -264,7 +273,9 @@ class Directory(FSElement):
             next_element = workdir.subelement_by_name(_path)
 
         if next_element is None:
-            return None
+            raise LookupError("Path doesn't exists!")
+        if next_element.type == FSElement.FILE:
+            raise LookupError('You can not CD into a file!')
         if _next_paths is '':
             return next_element
         return next_element.cd(_next_paths)
@@ -308,6 +319,11 @@ class Directory(FSElement):
         self.add_element(new_file)
         self.save_to_remote()
 
+    def rm(self):
+        for subelement in self.ls():
+            subelement.rm()
+        self._destroy()
+
     def __repr__(self):
         return '<Directory: %s>' % self.path()
 
@@ -339,6 +355,9 @@ class File(FSElement):
     @content.setter
     def content(self, value):
         self._content = value
+
+    def rm(self):
+        self._destroy()
 
     def __repr__(self):
         return '<File: %s>' % self.path()
@@ -426,6 +445,23 @@ class Api(object):
             method='post',
             payload={'fingerprint': fingerprint})['contract']
         return contract
+
+    def destroy_storage(self, auth_info):
+        self._make_api_request(
+            'destroy-storage',
+            method='post',
+            payload={
+                'auth': auth_info,
+            })
+
+    def destroy_files(self, auth_info, file_addresses):
+        self._make_api_request(
+            'destroy-file',
+            method='post',
+            payload={
+                'auth': auth_info,
+                'file_addresses': ','.join(file_addresses)
+            })
 
     def _make_api_request(self, endpoint, method='get', payload=None):
 

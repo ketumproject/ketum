@@ -92,6 +92,11 @@ class StorageManager(object):
 
         return storage
 
+    def destroy_storage(self, storage_name, passphrase):
+        storage = self.get_storage(storage_name, passphrase)
+        storage.destroy_storage()
+        self.delete(storage_name)
+
     def storages(self):
         storage_list = list()
         for storage_name in os.listdir(storage_dir):
