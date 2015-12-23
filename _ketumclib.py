@@ -329,6 +329,9 @@ class Directory(FSElement):
         self.save_to_remote()
 
     def rm(self):
+        if self.parent == None:
+            raise Exception("root can't be removed")
+
         for subelement in self.ls():
             subelement.rm()
         self._destroy()
