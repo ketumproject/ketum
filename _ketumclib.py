@@ -280,8 +280,6 @@ class Directory(FSElement):
 
         if next_element is None:
             raise LookupError("Path doesn't exists!")
-        if next_element.type == FSElement.FILE:
-            raise LookupError('You can not CD into a file!')
         if _next_paths is '':
             return next_element
         return next_element.cd(_next_paths)
