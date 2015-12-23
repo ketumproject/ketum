@@ -301,10 +301,15 @@ class Directory(FSElement):
         self.add_element(new_dir)
         self.save_to_remote()
 
-    def ls(self):
+    def ls(self, element_type=None):
         if not self.is_refreshed:
             self.refresh_from_remote()
-        return [element for element in self._elements.itervalues()]
+
+        element_list = [element for element in self._elements.itervalues()]
+        if element_type:
+            element_list = filter(lambda x: x.type == element_type, element_list)
+
+        return element_list
 
     def touch(self, name):
         assert self._name_validator(name), \
