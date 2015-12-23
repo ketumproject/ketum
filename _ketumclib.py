@@ -199,6 +199,12 @@ class FSElement(object):
         char_set = cls.ALLOWED_CHARS_FOR_NAME
         return all(x in char_set for x in name)
 
+    def is_directory(self):
+        return False
+
+    def is_file(self):
+        return False
+
 
 class Directory(FSElement):
     def __init__(self, *args, **kwargs):
@@ -324,6 +330,9 @@ class Directory(FSElement):
             subelement.rm()
         self._destroy()
 
+    def is_directory(self):
+        return True
+
     def __repr__(self):
         return '<Directory: %s>' % self.path()
 
@@ -358,6 +367,9 @@ class File(FSElement):
 
     def rm(self):
         self._destroy()
+
+    def is_file(self):
+        return True
 
     def __repr__(self):
         return '<File: %s>' % self.path()
